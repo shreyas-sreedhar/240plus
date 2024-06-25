@@ -10,93 +10,193 @@ function getTweetBox() {
     return tweetBox;
 }
 
-function convertTextToImage(text) {
+function injectConvertButton() {
+    const tablistDiv = document.querySelector('button[data-testid="geoButton"]');
+  
+
+    
+    if (tablistDiv) {
+      const convertButton = document.createElement('button');
+      convertButton.style.width = "32px";
+      convertButton.style.height = "32px";
+      const img = document.createElement("img");
+      img.src = chrome.runtime.getURL("./icon16.png");
+    //   document.body.appendChild(img);
+      convertButton.appendChild(img);
+     
+      convertButton.setAttribute('role', 'tab');
+      convertButton.setAttribute('aria-selected', 'false');
+      convertButton.setAttribute('data-testid', 'convertToImageButton');
+      convertButton.style.marginLeft = '2px';
+      convertButton.style.padding = '4px 8px';
+      convertButton.style.border = '1px solid #ccc';
+      convertButton.style.borderRadius = '25px';
+    //   convertButton.style.background = '#000000';
+      convertButton.style.cursor = 'pointer';
+
+  
+      tablistDiv.parentElement.parentElement.appendChild(convertButton);
+  
+      // Add event listener to the new button
+      convertButton.addEventListener('click', handleTextConversion);
+    }
+  }
+  
+  function checkAndInjectButton() {
+    if (!document.querySelector('[data-testid="convertToImageButton"]')) {
+      injectConvertButton();
+    }
+  }
+  
+  // Run the check periodically
+  setInterval(checkAndInjectButton, 1000);
+
+// function convertTextToImage(text, authorName) {
+//     const canvas = document.createElement('canvas');
+//     const context = canvas.getContext('2d');
+//     const fontSize = 24;
+//     const padding = 100;
+//     const lineHeight = fontSize * 1.5;
+//     const maxWidth = 900;
+//     const authorFontSize = 18;
+
+//     canvas.width = 1024;
+//     canvas.height = 1024;
+
+//     // Set background
+//     context.fillStyle = '#ffffff';
+//     context.fillRect(0, 0, canvas.width, canvas.height);
+
+
+//     context.font = `${fontSize}px 'Helvetica Neue', Arial, sans-serif`;
+//     context.fillStyle = '#000000';
+
+//     function getLines(text) {
+//         const words = text.split(' ');
+//         const lines = [];
+//         let currentLine = words[0];
+
+//         for (let i = 1; i < words.length; i++) {
+//             const word = words[i];
+//             const width = context.measureText(currentLine + " " + word).width;
+//             if (width < maxWidth) {
+//                 currentLine += " " + word;
+//             } else {
+//                 lines.push(currentLine);
+//                 currentLine = word;
+//             }
+//         }
+//         lines.push(currentLine);
+//         return lines;
+//     }
+
+//     const lines = getLines(text);
+//     // const lines = [];
+//     // let currentLine = '';
+//     // const words = text.split(' ');
+
+//     // words.forEach(word => {
+//     //   const testLine = `${currentLine}${word} `;
+//     //   const { width } = context.measureText(testLine);
+//     //   if (width > maxWidth && currentLine) {
+//     //     lines.push(`\n`);
+//     //     currentLine = `${word} `;
+//     //   } else {
+//     //     currentLine = testLine;
+//     //   }
+//     // });
+//     // lines.push(currentLine);
+
+//     // const canvasHeight = lineHeight * lines.length + padding * 2;
+//     // const canvasHeight = 1024;
+//     // canvas.width = 1024;
+//     // canvas.height = canvasHeight;
+
+//     // context.fillStyle = '#ffffff';
+//     // context.fillRect(0, 0, canvas.width, canvas.height);
+//     // context.fillStyle = '#000000';
+//     // context.font = `${fontSize}px Arial`;
+//     // context.textBaseline = 'top';
+
+
+//     // Draw text
+//     lines.forEach((line, index) => {
+//         context.fillText(line, padding, padding + index * lineHeight);
+//     });
+
+//     // Add author name
+//     context.font = `${authorFontSize}px 'Helvetica Neue', Arial, sans-serif`;
+//     context.fillStyle = '#666666';
+//     context.fillText(authorName, padding, canvas.height - padding);
+
+//     return canvas.toDataURL('image/png');
+
+
+//     // lines.forEach((line, index) => {
+//     //     context.fillText(line, padding, padding + index * lineHeight);
+//     // });
+
+//     // return canvas.toDataURL('image/png');
+// }
+function convertTextToImage(text, authorName) {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     const fontSize = 24;
-    const padding = 100;
     const lineHeight = fontSize * 1.5;
+    const padding = 40;
     const maxWidth = 900;
-    const authorFontsize = 18;
-
+    const authorFontSize = 18;
+  
+    // Set font for measuring and drawing
+    context.font = `${fontSize}px 'Helvetica Neue', Arial, sans-serif`;
+  
+    // Word wrap function
+    function getLines(text) {
+      const words = text.split(' ');
+      const lines = [];
+      let currentLine = words[0];
+  
+      for (let i = 1; i < words.length; i++) {
+        const word = words[i];
+        const width = context.measureText(currentLine + " " + word).width;
+        if (width < maxWidth) {
+          currentLine += " " + word;
+        } else {
+          lines.push(currentLine);
+          currentLine = word;
+        }
+      }
+      lines.push(currentLine);
+      return lines;
+    }
+  
+    const lines = getLines(text);
+  
+    // Calculate canvas height based on number of lines
+    const canvasHeight = Math.max(1024, lines.length * lineHeight + padding * 3 + authorFontSize);
     canvas.width = 1024;
-    canvas.height = 1024;
-
+    canvas.height = canvasHeight;
+  
     // Set background
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, canvas.width, canvas.height);
-
-
+  
+    // Draw main text
     context.font = `${fontSize}px 'Helvetica Neue', Arial, sans-serif`;
     context.fillStyle = '#000000';
-
-    function getLines(text) {
-        const words = text.split(' ');
-        const lines = [];
-        let currentLine = words[0];
-
-        for (let i = 1; i < words.length; i++) {
-            const word = words[i];
-            const width = context.measureText(currentLine + " " + word).width;
-            if (width < maxWidth) {
-                currentLine += " " + word;
-            } else {
-                lines.push(currentLine);
-                currentLine = word;
-            }
-        }
-        lines.push(currentLine);
-        return lines;
-    }
-
-    const lines = getLines(text);
-    // const lines = [];
-    // let currentLine = '';
-    // const words = text.split(' ');
-
-    // words.forEach(word => {
-    //   const testLine = `${currentLine}${word} `;
-    //   const { width } = context.measureText(testLine);
-    //   if (width > maxWidth && currentLine) {
-    //     lines.push(`\n`);
-    //     currentLine = `${word} `;
-    //   } else {
-    //     currentLine = testLine;
-    //   }
-    // });
-    // lines.push(currentLine);
-
-    // const canvasHeight = lineHeight * lines.length + padding * 2;
-    // const canvasHeight = 1024;
-    // canvas.width = 1024;
-    // canvas.height = canvasHeight;
-
-    // context.fillStyle = '#ffffff';
-    // context.fillRect(0, 0, canvas.width, canvas.height);
-    // context.fillStyle = '#000000';
-    // context.font = `${fontSize}px Arial`;
-    // context.textBaseline = 'top';
-
-
-    // Draw text
+    context.textBaseline = 'top';
+  
     lines.forEach((line, index) => {
-        context.fillText(line, padding, padding + index * lineHeight);
+      context.fillText(line, padding, padding + index * lineHeight);
     });
-
+  
     // Add author name
     context.font = `${authorFontSize}px 'Helvetica Neue', Arial, sans-serif`;
     context.fillStyle = '#666666';
-    context.fillText(authorName, padding, canvas.height - padding);
-
+    context.fillText(authorName, padding, canvasHeight - padding - authorFontSize);
+  
     return canvas.toDataURL('image/png');
-
-
-    // lines.forEach((line, index) => {
-    //     context.fillText(line, padding, padding + index * lineHeight);
-    // });
-
-    // return canvas.toDataURL('image/png');
-}
+  }
 
 function dataURLtoBlob(dataurl) {
     const arr = dataurl.split(','),
@@ -168,6 +268,7 @@ function handleTextConversion() {
         document.body.removeChild(closeButton);
     };
 }
+
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'convertToImage') {

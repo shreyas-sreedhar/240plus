@@ -16,6 +16,12 @@
         "js": ["content.js"]
       }
     ],
+    "web_accessible_resources": [
+    {
+      "resources": ["icon16.png"],
+      "matches": ["*://*.twitter.com/*", "*://*.x.com/*"]
+    }
+  ],
     "action": {
       "default_popup": "popup.html",
       "default_icon": {
