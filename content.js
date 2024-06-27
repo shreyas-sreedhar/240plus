@@ -10,41 +10,81 @@ function getTweetBox() {
     return tweetBox;
 }
 
-function injectConvertButton() {
-    const tablistDiv = document.querySelector('button[data-testid="geoButton"]');
+// function injectConvertButton() {
+//     const tablistDiv = document.querySelector('button[data-testid="geoButton"]');
+
   
 
     
-    if (tablistDiv) {
-      const convertButton = document.createElement('button');
-      convertButton.style.width = "32px";
-      convertButton.style.height = "32px";
-      const img = document.createElement("img");
-      img.src = chrome.runtime.getURL("./icon16.png");
-    //   document.body.appendChild(img);
-      convertButton.appendChild(img);
+//     if (tablistDiv) {
+//         const div = document.createElement('div')
+//         div.role = "presentation1";
+//         tablistDiv.appendChild(div)
+
+//       const convertButton = document.createElement('button');
+//       convertButton.style.width = "20px";
+//       convertButton.style.height = "20px";
+//     //   convertButton.style.alignItems = "center";
+//     //   convertButton.style.justifyContent = "center";
+//     //   convertButton.style.flexDirection = "row";
+//     //   convertButton.style.paddingTop = "10px"
+
+      
+//     //   const img = document.createElement("img");
+//     //   img.src = chrome.runtime.getURL("./icon16.png");
+//     //   img.style.width = "20px";
+//     //   img.style.height = "20px";
+//     //   img.style.alignItems = "center"
+//     //   document.body.appendChild(img);
+//     //   convertButton.appendChild(img);
      
+//       convertButton.setAttribute('role', 'tab');
+//       convertButton.setAttribute('aria-selected', 'false');
+//       convertButton.setAttribute('data-testid', 'convertToImageButton');
+//     //   convertButton.style.marginLeft = '2px';
+//     //   convertButton.style.padding = '4px 8px';
+//     //   convertButton.style.border = '1px solid #ccc';
+//     //   convertButton.style.borderRadius = '25px';
+//     //   convertButton.style.background = '#000000';
+//       convertButton.style.cursor = 'pointer';
+
+  
+//       adiv.parentElement.parentElement.appendChild(convertButton);
+  
+//       // Add event listener to the new button
+//       convertButton.addEventListener('click', handleTextConversion);
+//     }
+//   }
+function injectConvertButton() {
+    const tablist = document.querySelector('div[data-testid="toolBar"]');
+    if (tablist) {
+      const convertButton = document.createElement('button');
+      convertButton.style.minWidth = "20px";
+      convertButton.style.minHeight = "20px";
+      convertButton.style.marginLeft = "8px"
+      convertButton.style.backgroundColor = "#1d9bf0"
+      convertButton.style.border = "None"
+      convertButton.style.borderRadius = "20px"
       convertButton.setAttribute('role', 'tab');
       convertButton.setAttribute('aria-selected', 'false');
       convertButton.setAttribute('data-testid', 'convertToImageButton');
-      convertButton.style.marginLeft = '2px';
-      convertButton.style.padding = '4px 8px';
-      convertButton.style.border = '1px solid #ccc';
-      convertButton.style.borderRadius = '25px';
-    //   convertButton.style.background = '#000000';
       convertButton.style.cursor = 'pointer';
-
-  
-      tablistDiv.parentElement.parentElement.appendChild(convertButton);
-  
-      // Add event listener to the new button
+      const text = document.createElement("div");
+      text.innerText = "Send as Image";
+      convertButton.appendChild(text)
+      
+      // Insert the new button after the geoButton
+    //   tablist.parentElement.insertBefore(convertButton, geoButton.nextSibling);
+    tablist.appendChild(convertButton);
+      
       convertButton.addEventListener('click', handleTextConversion);
     }
-  }
-  
+   }
+   
   function checkAndInjectButton() {
     if (!document.querySelector('[data-testid="convertToImageButton"]')) {
       injectConvertButton();
+      console.log("checkandinjectbutton clicked")
     }
   }
   
