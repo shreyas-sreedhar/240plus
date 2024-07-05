@@ -1,55 +1,55 @@
-// Function to get the tweet input box
+// Function - Find Tweet TextBox
 function getTweetBox() {
-  let tweetBox = document.querySelector('[data-testid="tweetTextarea_0"]');
-  if (!tweetBox) {
-    tweetBox = document.querySelector(".public-DraftEditor-content");
-  }
-  if (!tweetBox) {
-    tweetBox = document.querySelector('div[aria-label="Post text"][role="textbox"]');
-  }
-  return tweetBox;
+  return (
+    document.querySelector('[data-testid="tweetTextarea_0"]') ||
+    document.querySelector(".public-DraftEditor-content") ||
+    document.querySelector('div[aria-label="Post text"][role="textbox"]')
+  );
 }
 
-// Function to inject the "Send as Image" button
+// Function - Inserting "Send as Image" button next to Post
 function injectConvertButton() {
   const tablist = document.querySelector('div[data-testid="toolBar"]');
-  if (tablist) {
+  if (tablist && !document.querySelector('[data-testid="convertToImageButton"]')) {
     const convertButton = createConvertButton();
     tablist.appendChild(convertButton);
     convertButton.addEventListener("click", handleTextConversion);
+    console.log("Button injected");
   }
 }
 
-// Helper function to create the convert button
+// Function - Create the "Send as Image" button
 function createConvertButton() {
   const convertButton = document.createElement("button");
-  convertButton.style.minWidth = "20px";
-  convertButton.style.minHeight = "20px";
-  convertButton.style.marginLeft = "8px";
-  convertButton.style.borderRadius = "20px";
-  convertButton.style.padding = "8px";
-  convertButton.style.backgroundColor = "#1d9bf0";
-  convertButton.style.border = "None";
-  convertButton.style.marginTop = "6px";
+  Object.assign(convertButton.style, {
+    minWidth: "20px",
+    minHeight: "20px",
+    marginLeft: "8px",
+    borderRadius: "20px",
+    padding: "8px",
+    backgroundColor: "#1d9bf0",
+    border: "None",
+    marginTop: "6px",
+    cursor: "pointer"
+  });
 
   convertButton.setAttribute("role", "tab");
   convertButton.setAttribute("aria-selected", "false");
   convertButton.setAttribute("data-testid", "convertToImageButton");
-  convertButton.style.cursor = "pointer";
 
   const buttonText = document.createElement("div");
   buttonText.innerText = "Send as Image";
-  buttonText.style.fontFamily = "Helvetica sans-serif";
+  buttonText.style.fontFamily = "Helvetica, sans-serif";
   convertButton.appendChild(buttonText);
 
   return convertButton;
 }
 
-// Function to check and inject the button periodically
+// Function - Check to see if button exists and inject the button periodically
 function checkAndInjectButton() {
   if (!document.querySelector('[data-testid="convertToImageButton"]')) {
     injectConvertButton();
-    console.log("Checked and injected button");
+    console.log("Checked and Added the Send as Image button");
   }
 }
 
@@ -60,7 +60,7 @@ setInterval(checkAndInjectButton, 1000);
 function generateImages(text, authorUsername) {
   const canvasSize = 900;
   const padding = 60;
-  const picSize = 100;
+  // const picSize = 100;
   const maxWidth = canvasSize - padding * 2;
 
   const canvas = document.createElement("canvas");
@@ -68,7 +68,6 @@ function generateImages(text, authorUsername) {
   canvas.height = canvasSize;
   const context = canvas.getContext("2d");
 
-  // Determine font size based on text length
   let fontSize = text.length < 100 ? 48 : text.length < 200 ? 36 : 24;
   const lineHeight = fontSize * 1.5;
   const maxLinesPerImage = Math.floor((canvasSize - padding * 3 - 100) / lineHeight);
@@ -98,9 +97,9 @@ function generateImages(text, authorUsername) {
 
   let allLines = getLines(`"${text}"`, fontSize);
 
-  // Calculate total text height
-  let totalTextHeight = allLines.reduce((acc, line) => acc + lineHeight, 0);
-  let startY = (canvasSize - totalTextHeight) / 2;
+// Calculate total text height
+  const totalTextHeight = allLines.length * lineHeight;
+  const startY = (canvasSize - totalTextHeight) / 2;
 
   // Draw on canvas
   context.fillStyle = "#ffffff"; // White background
@@ -122,7 +121,7 @@ function generateImages(text, authorUsername) {
   context.font = `bold ${usernameFontSize}px Arial, sans-serif`;
   context.fillStyle = "#000000"; // Black text
   context.textAlign = "center";
-  context.fillText(`~ @${authorUsername}`, canvasSize / 2, canvasSize - padding - picSize + 60);
+  context.fillText(`~ @${authorUsername}`, canvasSize / 2, canvasSize - padding - 40);
 
   // Add image number if there are multiple images
   if (allLines.length > maxLinesPerImage) {
@@ -170,10 +169,7 @@ async function handleTextConversion() {
     'a[data-testid="AppTabBar_Profile_Link"]'
   );
   if (usernameElement) {
-    authorUsername = usernameElement.getAttribute("href");
-    if (authorUsername.startsWith("/")) {
-      authorUsername = authorUsername.substring(1);
-    }
+    authorUsername = usernameElement.getAttribute("href").substring(1);
   }
 
   console.log(`Username: ${authorUsername}`);
@@ -182,22 +178,45 @@ async function handleTextConversion() {
     const imageDataUrls = generateImages(text, authorUsername);
 
     // Clear the text from the tweet box
-    clearTweetBox(tweetBox);
+    // clearTweetBox(tweetBox);
 
     // Insert the image into the tweet compose area
     await insertImageIntoTweet(imageDataUrls[0]);
 
     console.log("Text converted to image and inserted into tweet");
-
+    clearTweetBox(tweetBox);
+    console.log("Text Cleared")
   } catch (error) {
     console.error("Error during text conversion:", error);
   }
 }
-
 function clearTweetBox(tweetBox) {
-  tweetBox.innerHTML = '';
+  simulateBackspace(tweetBox);
 }
 
+// function clearTweetBox(tweetBox) {
+//   tweetBox.textContent = '';
+//   tweetBox.dispatchEvent(new Event('input', { bubbles: true }));
+// }
+function simulateBackspace(tweetBox) {
+  const event = new KeyboardEvent('keydown', {
+    bubbles: true,
+    cancelable: true,
+    key: 'Backspace',
+    code: 'Backspace',
+    keyCode: 8,
+    which: 8,
+  });
+
+  // Set focus on the tweet box
+  tweetBox.focus();
+
+  // Get the length of the text and simulate backspace for each character
+  const textLength = tweetBox.textContent.length;
+  for (let i = 0; i < textLength; i++) {
+    tweetBox.dispatchEvent(event);
+  }
+}
 async function insertImageIntoTweet(imageDataUrl) {
   try {
     // Find the file input element
@@ -219,8 +238,7 @@ async function insertImageIntoTweet(imageDataUrl) {
     fileInput.files = dt.files;
 
     // Dispatch a change event to notify the application that a file has been selected
-    const event = new Event('change', { bubbles: true });
-    fileInput.dispatchEvent(event);
+    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
 
     console.log("Image inserted into tweet");
   } catch (error) {
@@ -232,13 +250,8 @@ async function insertImageIntoTweet(imageDataUrl) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "convertToImage") {
     handleTextConversion()
-      .then(() => {
-        sendResponse({ status: "Conversion completed" });
-      })
-      .catch((error) => {
-        console.error("Error during conversion:", error);
-        sendResponse({ status: "Conversion failed", error: error.message });
-      });
+      .then(() => { sendResponse({ status: "Conversion completed" })})
+      .catch((error) => sendResponse({ status: "Conversion failed", error: error.message }));
     return true; // Indicates that the response is sent asynchronously
   }
 });
