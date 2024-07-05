@@ -2,12 +2,11 @@
 function getTweetBox() {
   let tweetBox = document.querySelector('[data-testid="tweetTextarea_0"]');
   if (!tweetBox) {
-    tweetBox = document.querySelector('.public-DraftEditor-content');
+    tweetBox = document.querySelector(".public-DraftEditor-content");
   }
   if (!tweetBox) {
     tweetBox = document.querySelector('div[aria-label="Post text"][role="textbox"]');
   }
-  console.log(tweetBox);
   return tweetBox;
 }
 
@@ -15,69 +14,79 @@ function getTweetBox() {
 function injectConvertButton() {
   const tablist = document.querySelector('div[data-testid="toolBar"]');
   if (tablist) {
-    const convertButton = document.createElement('button');
-    convertButton.style.minWidth = "20px";
-    convertButton.style.minHeight = "20px";
-    convertButton.style.marginLeft = "8px";
-    convertButton.style.backgroundColor = "#1d9bf0";
-    convertButton.style.border = "None";
-    convertButton.style.borderRadius = "20px";
-    convertButton.setAttribute('role', 'tab');
-    convertButton.setAttribute('aria-selected', 'false');
-    convertButton.setAttribute('data-testid', 'convertToImageButton');
-    convertButton.style.cursor = 'pointer';
-    const text = document.createElement("div");
-    text.innerText = "Send as Image";
-    convertButton.appendChild(text);
-
+    const convertButton = createConvertButton();
     tablist.appendChild(convertButton);
-
-    convertButton.addEventListener('click', handleTextConversion);
+    convertButton.addEventListener("click", handleTextConversion);
   }
+}
+
+// Helper function to create the convert button
+function createConvertButton() {
+  const convertButton = document.createElement("button");
+  convertButton.style.minWidth = "20px";
+  convertButton.style.minHeight = "20px";
+  convertButton.style.marginLeft = "8px";
+  convertButton.style.borderRadius = "20px";
+  convertButton.style.padding = "8px";
+  convertButton.style.backgroundColor = "#1d9bf0";
+  convertButton.style.border = "None";
+  convertButton.style.marginTop = "6px";
+
+  convertButton.setAttribute("role", "tab");
+  convertButton.setAttribute("aria-selected", "false");
+  convertButton.setAttribute("data-testid", "convertToImageButton");
+  convertButton.style.cursor = "pointer";
+
+  const buttonText = document.createElement("div");
+  buttonText.innerText = "Send as Image";
+  buttonText.style.fontFamily = "Helvetica sans-serif";
+  convertButton.appendChild(buttonText);
+
+  return convertButton;
 }
 
 // Function to check and inject the button periodically
 function checkAndInjectButton() {
   if (!document.querySelector('[data-testid="convertToImageButton"]')) {
     injectConvertButton();
-    console.log("checkandinjectbutton clicked");
+    console.log("Checked and injected button");
   }
 }
 
-// Run the check periodically
+// Check periodically
 setInterval(checkAndInjectButton, 1000);
 
-// New function for image generation
+// Function to generate images
 function generateImages(text, authorUsername) {
   const canvasSize = 900;
   const padding = 60;
   const picSize = 100;
-  const maxWidth = canvasSize - (padding * 2);
+  const maxWidth = canvasSize - padding * 2;
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = canvasSize;
   canvas.height = canvasSize;
-  const context = canvas.getContext('2d');
+  const context = canvas.getContext("2d");
 
   // Determine font size based on text length
   let fontSize = text.length < 100 ? 48 : text.length < 200 ? 36 : 24;
   const lineHeight = fontSize * 1.5;
-  const maxLinesPerImage = Math.floor((canvasSize - (padding * 3) - 100) / lineHeight);
+  const maxLinesPerImage = Math.floor((canvasSize - padding * 3 - 100) / lineHeight);
 
   const imageDataUrls = [];
 
   // Split text into lines that fit within the canvas width
   function getLines(text, fontSize) {
     context.font = `${fontSize}px Arial, sans-serif`;
-    const words = text.split(' ');
+    const words = text.split(" ");
     const lines = [];
     let currentLine = words[0];
 
     for (let i = 1; i < words.length; i++) {
       const word = words[i];
-      const width = context.measureText(currentLine + ' ' + word).width;
+      const width = context.measureText(currentLine + " " + word).width;
       if (width < maxWidth) {
-        currentLine += ' ' + word;
+        currentLine += " " + word;
       } else {
         lines.push(currentLine);
         currentLine = word;
@@ -94,12 +103,12 @@ function generateImages(text, authorUsername) {
   let startY = (canvasSize - totalTextHeight) / 2;
 
   // Draw on canvas
-  context.fillStyle = '#ffffff'; // White background
+  context.fillStyle = "#ffffff"; // White background
   context.fillRect(0, 0, canvasSize, canvasSize);
 
   context.font = `${fontSize}px Arial, sans-serif`;
-  context.fillStyle = '#000000'; // Black text
-  context.textBaseline = 'top'; // Align text vertically to top
+  context.fillStyle = "#000000"; // Black text
+  context.textBaseline = "top"; // Align text vertically to top
 
   allLines.forEach((line, index) => {
     let textWidth = context.measureText(line).width;
@@ -111,146 +120,127 @@ function generateImages(text, authorUsername) {
   // Draw author username in the middle
   const usernameFontSize = 20;
   context.font = `bold ${usernameFontSize}px Arial, sans-serif`;
-  context.fillStyle = '#000000'; // Black text
-  context.textAlign = 'center';
+  context.fillStyle = "#000000"; // Black text
+  context.textAlign = "center";
   context.fillText(`~ @${authorUsername}`, canvasSize / 2, canvasSize - padding - picSize + 60);
 
   // Add image number if there are multiple images
   if (allLines.length > maxLinesPerImage) {
     const imageNumber = Math.floor(allLines.length / maxLinesPerImage) + 1;
-    context.textAlign = 'right';
+    context.textAlign = "right";
     context.fillText(`${imageNumber}/${Math.ceil(allLines.length / maxLinesPerImage)}`, canvasSize - padding, canvasSize - padding);
-    context.textAlign = 'left';
+    context.textAlign = "left";
   }
 
   // Add watermark with reduced opacity and smaller font
   const watermarkFontSize = 14;
   context.font = `${watermarkFontSize}px Arial, sans-serif`;
-  context.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Very light opacity black
-  context.textAlign = 'right';
-  context.fillText('Generated by @240Plus', canvasSize - padding, canvasSize - padding - 25);
+  context.fillStyle = "rgba(0, 0, 0, 0.1)"; // Very light opacity black
+  context.textAlign = "right";
+  context.fillText("Generated by @240Plus", canvasSize - padding, canvasSize - padding - 25);
 
   // Add image to array
-  imageDataUrls.push(canvas.toDataURL('image/png'));
+  imageDataUrls.push(canvas.toDataURL("image/png"));
 
   return imageDataUrls;
 }
 
-
-
-
 // Function to handle text conversion
-function handleTextConversion() {
-  console.log('Converting text to image(s)...');
+async function handleTextConversion() {
+  console.log("Converting text to image...");
 
   const tweetBox = getTweetBox();
-
   if (!tweetBox) {
-    console.error('Tweet box not found');
+    console.error("Tweet box not found");
     return;
   }
 
-  const textNodes = Array.from(tweetBox.querySelectorAll('*'))
-    .filter(el => el.childNodes.length === 1 && el.childNodes[0].nodeType === Node.TEXT_NODE)
-    .map(el => el.textContent);
+  const textNodes = Array.from(tweetBox.querySelectorAll("*"))
+    .filter(
+      (el) =>
+        el.childNodes.length === 1 &&
+        el.childNodes[0].nodeType === Node.TEXT_NODE
+    )
+    .map((el) => el.textContent);
 
-  const text = textNodes.join('');
+  const text = textNodes.join("");
 
-  // Extract user information using more reliable selectors
-  
-  let authorUsername = 'unknown';
-
-
-  // Find the account switcher button
-  const accountSwitcherButton = document.querySelector('[data-testid="SideNav_AccountSwitcher_Button"]');
-
-    const usernameElement = document.querySelector('a[data-testid="AppTabBar_Profile_Link"]');
-    if (usernameElement) {
-      authorUsername = usernameElement.getAttribute('href');
-      console.log('Profile URL:', authorUsername);
-      if (authorUsername.startsWith('/')) {
-        authorUsername = authorUsername.substring(1); // Remove the @ symbol
-      }
+  let authorUsername = "unknown";
+  const usernameElement = document.querySelector(
+    'a[data-testid="AppTabBar_Profile_Link"]'
+  );
+  if (usernameElement) {
+    authorUsername = usernameElement.getAttribute("href");
+    if (authorUsername.startsWith("/")) {
+      authorUsername = authorUsername.substring(1);
     }
+  }
 
   console.log(`Username: ${authorUsername}`);
 
-  const imageDataUrls = generateImages(text, authorUsername);
+  try {
+    const imageDataUrls = generateImages(text, authorUsername);
 
+    // Clear the text from the tweet box
+    clearTweetBox(tweetBox);
 
-  const imageContainer = document.createElement('div');
-  imageContainer.style.position = 'fixed';
-  imageContainer.style.top = '10px';
-  imageContainer.style.right = '10px';
-  imageContainer.style.zIndex = '9999';
+    // Insert the image into the tweet compose area
+    await insertImageIntoTweet(imageDataUrls[0]);
 
-  imageDataUrls.forEach((dataUrl, index) => {
-    const imgWrapper = document.createElement('div');
-    imgWrapper.style.marginBottom = '10px';
-    imgWrapper.style.position = 'relative';
+    console.log("Text converted to image and inserted into tweet");
 
-    const img = document.createElement('img');
-    img.src = dataUrl;
-    img.style.border = '2px solid black';
-    img.style.borderRadius = '5px';
-    img.style.width = '300px'; // Smaller preview size
+  } catch (error) {
+    console.error("Error during text conversion:", error);
+  }
+}
 
-    const copyButton = document.createElement('button');
-    copyButton.textContent = 'Copy to Clipboard';
-    copyButton.style.position = 'absolute';
-    copyButton.style.bottom = '10px';
-    copyButton.style.left = '10px';
-    copyButton.style.zIndex = '10000';
-    copyButton.style.cursor = 'pointer';
+function clearTweetBox(tweetBox) {
+  tweetBox.innerHTML = '';
+}
 
-    copyButton.onclick = function () {
-      // Create a temporary canvas to get the full-size image data
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = 900;
-      tempCanvas.height = 900;
-      const tempCtx = tempCanvas.getContext('2d');
-      const tempImg = new Image();
-      tempImg.onload = function () {
-        tempCtx.drawImage(tempImg, 0, 0);
-        tempCanvas.toBlob(function (blob) {
-          navigator.clipboard.write([
-            new ClipboardItem({ 'image/png': blob })
-          ]).then(function () {
-            alert('Image copied to clipboard!');
-            imgWrapper.remove();
-            if (imageContainer.children.length === 0) {
-              imageContainer.remove();
-            }
-          }).catch(function (error) {
-            console.error('Error copying image to clipboard:', error);
-          });
-        }, 'image/png');
-      };
-      tempImg.src = dataUrl;
-    };
+async function insertImageIntoTweet(imageDataUrl) {
+  try {
+    // Find the file input element
+    const fileInput = document.querySelector('input[type="file"][accept^="image/"]');
+    if (!fileInput) {
+      throw new Error("File input for image upload not found");
+    }
 
-    imgWrapper.appendChild(img);
-    imgWrapper.appendChild(copyButton);
-    imageContainer.appendChild(imgWrapper);
-  });
+    // Convert data URL to Blob
+    const response = await fetch(imageDataUrl);
+    const blob = await response.blob();
 
-  document.body.appendChild(imageContainer);
+    // Create a File object from the Blob
+    const file = new File([blob], "tweet_image.png", { type: "image/png" });
 
-  // Show a message to the user
-  alert(`${imageDataUrls.length} image(s) generated. Click "Copy to Clipboard" button under each image to copy it. The image will disappear once copied.`);
+    // Create a FileList object (which is what a file input normally produces)
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+
+    // Dispatch a change event to notify the application that a file has been selected
+    const event = new Event('change', { bubbles: true });
+    fileInput.dispatchEvent(event);
+
+    console.log("Image inserted into tweet");
+  } catch (error) {
+    console.error("Error inserting image:", error);
+  }
 }
 
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'convertToImage') {
-    try {
-      handleTextConversion();
-      sendResponse({ status: 'Conversion completed' });
-    } catch (error) {
-      console.error('Error during conversion:', error);
-      sendResponse({ status: 'Conversion failed', error: error.message });
-    }
+  if (request.action === "convertToImage") {
+    handleTextConversion()
+      .then(() => {
+        sendResponse({ status: "Conversion completed" });
+      })
+      .catch((error) => {
+        console.error("Error during conversion:", error);
+        sendResponse({ status: "Conversion failed", error: error.message });
+      });
+    return true; // Indicates that the response is sent asynchronously
   }
 });
 
-console.log('Twitter Text to Image Converter content script loaded');
+console.log("Twitter Text to Image Converter content script loaded");
