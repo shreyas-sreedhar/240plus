@@ -48,29 +48,36 @@ function checkAndInjectButton() {
 setInterval(checkAndInjectButton, 1000);
 
 // New function for image generation
-function generateImages(text, authorName, authorUsername, authorProfilePic) {
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-
-  // Set dimensions and styles
+function generateImages(text, authorUsername) {
   const canvasSize = 900;
   const padding = 60;
+  const picSize = 100;
   const maxWidth = canvasSize - (padding * 2);
 
+  const canvas = document.createElement('canvas');
   canvas.width = canvasSize;
   canvas.height = canvasSize;
+  const context = canvas.getContext('2d');
 
+  // Determine font size based on text length
+  let fontSize = text.length < 100 ? 48 : text.length < 200 ? 36 : 24;
+  const lineHeight = fontSize * 1.5;
+  const maxLinesPerImage = Math.floor((canvasSize - (padding * 3) - 100) / lineHeight);
+
+  const imageDataUrls = [];
+
+  // Split text into lines that fit within the canvas width
   function getLines(text, fontSize) {
-    context.font = `${fontSize}px 'Arial', sans-serif`;
+    context.font = `${fontSize}px Arial, sans-serif`;
     const words = text.split(' ');
     const lines = [];
     let currentLine = words[0];
 
     for (let i = 1; i < words.length; i++) {
       const word = words[i];
-      const width = context.measureText(currentLine + " " + word).width;
+      const width = context.measureText(currentLine + ' ' + word).width;
       if (width < maxWidth) {
-        currentLine += " " + word;
+        currentLine += ' ' + word;
       } else {
         lines.push(currentLine);
         currentLine = word;
@@ -80,72 +87,58 @@ function generateImages(text, authorName, authorUsername, authorProfilePic) {
     return lines;
   }
 
-  // Determine font size based on text length
-  let fontSize = text.length < 100 ? 48 : text.length < 200 ? 36 : 24;
   let allLines = getLines(`"${text}"`, fontSize);
-  const lineHeight = fontSize * 1.5;
-  const maxLinesPerImage = Math.floor((canvasSize - (padding * 3) - 100) / lineHeight);
 
-  const imageDataUrls = [];
-  for (let i = 0; i < allLines.length; i += maxLinesPerImage) {
-    const imageLines = allLines.slice(i, i + maxLinesPerImage);
+  // Calculate total text height
+  let totalTextHeight = allLines.reduce((acc, line) => acc + lineHeight, 0);
+  let startY = (canvasSize - totalTextHeight) / 2;
 
-    // Set background
-    context.fillStyle = '#000000';
-    context.fillRect(0, 0, canvasSize, canvasSize);
+  // Draw on canvas
+  context.fillStyle = '#ffffff'; // White background
+  context.fillRect(0, 0, canvasSize, canvasSize);
 
-    // Draw main text
-    context.font = `${fontSize}px 'Arial', sans-serif`;
-    context.fillStyle = '#ffffff';
-    context.textBaseline = 'top';
+  context.font = `${fontSize}px Arial, sans-serif`;
+  context.fillStyle = '#000000'; // Black text
+  context.textBaseline = 'top'; // Align text vertically to top
 
-    imageLines.forEach((line, index) => {
-      context.fillText(line, padding, padding + index * lineHeight);
-    });
+  allLines.forEach((line, index) => {
+    let textWidth = context.measureText(line).width;
+    let lineY = startY + index * lineHeight;
+    let lineX = (canvasSize - textWidth) / 2;
+    context.fillText(line, lineX, lineY);
+  });
 
-    // Add profile picture
-    const picSize = 60;
-    const img = new Image();
-    img.src = authorProfilePic;
-    context.save();
-    context.beginPath();
-    context.arc(padding + picSize / 2, canvasSize - padding - picSize / 2, picSize / 2, 0, Math.PI * 2, true);
-    context.closePath();
-    context.clip();
-    context.drawImage(img, padding, canvasSize - padding - picSize, picSize, picSize);
-    context.restore();
+  // Draw author username in the middle
+  const usernameFontSize = 20;
+  context.font = `bold ${usernameFontSize}px Arial, sans-serif`;
+  context.fillStyle = '#000000'; // Black text
+  context.textAlign = 'center';
+  context.fillText(`~ @${authorUsername}`, canvasSize / 2, canvasSize - padding - picSize + 60);
 
-    // Add author name and username
-    context.font = `bold 18px 'Arial', sans-serif`;
-    context.fillStyle = '#ffffff';
-    context.fillText(authorName, padding + picSize + 15, canvasSize - padding - picSize + 5);
-
-    context.font = `16px 'Arial', sans-serif`;
-    context.fillStyle = '#cccccc';
-    context.fillText(`@${authorUsername}`, padding + picSize + 15, canvasSize - padding - picSize + 30);
-
-    // Add image number if there are multiple images
-    if (allLines.length > maxLinesPerImage) {
-      const imageNumber = Math.floor(i / maxLinesPerImage) + 1;
-      const totalImages = Math.ceil(allLines.length / maxLinesPerImage);
-      context.textAlign = 'right';
-      context.fillStyle = '#ffffff';
-      context.fillText(`${imageNumber}/${totalImages}`, canvasSize - padding, canvasSize - padding);
-      context.textAlign = 'left';
-    }
-
-    // Add watermark
-    context.font = '16px Arial, sans-serif';
-    context.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  // Add image number if there are multiple images
+  if (allLines.length > maxLinesPerImage) {
+    const imageNumber = Math.floor(allLines.length / maxLinesPerImage) + 1;
     context.textAlign = 'right';
-    context.fillText('Generated by @240Plus', canvasSize - padding, canvasSize - padding - 25);
-
-    // Add image to array
-    imageDataUrls.push(canvas.toDataURL('image/png'));
+    context.fillText(`${imageNumber}/${Math.ceil(allLines.length / maxLinesPerImage)}`, canvasSize - padding, canvasSize - padding);
+    context.textAlign = 'left';
   }
+
+  // Add watermark with reduced opacity and smaller font
+  const watermarkFontSize = 14;
+  context.font = `${watermarkFontSize}px Arial, sans-serif`;
+  context.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Very light opacity black
+  context.textAlign = 'right';
+  context.fillText('Generated by @240Plus', canvasSize - padding, canvasSize - padding - 25);
+
+  // Add image to array
+  imageDataUrls.push(canvas.toDataURL('image/png'));
 
   return imageDataUrls;
 }
+
+
+
+
 // Function to handle text conversion
 function handleTextConversion() {
   console.log('Converting text to image(s)...');
@@ -164,71 +157,12 @@ function handleTextConversion() {
   const text = textNodes.join('');
 
   // Extract user information using more reliable selectors
-  let authorName = 'Unknown';
+  
   let authorUsername = 'unknown';
-  let authorProfilePicUrl = '';
+
 
   // Find the account switcher button
   const accountSwitcherButton = document.querySelector('[data-testid="SideNav_AccountSwitcher_Button"]');
-
-//   if (accountSwitcherButton) {
-
-//     // Traverse through the DOM nodes to find the text content
-//     let authorName = '';
-
-//     // Iterate over child nodes of the button element
-//     accountSwitcherButton.childNodes.forEach(node => {
-//         // Check if the node has text content and trim it
-//         if (node.nodeType === Node.TEXT_NODE) {
-//           authorName += node.textContent.trim();
-//         }
-//     });
-
-//     // Output the extracted name
-//     console.log(authorName); // This will log "Shreyas" if found correctly
-// } else {
-//     console.log('Element not found');
-// }
-
-
-    // const nameElement = accountSwitcherButton.querySelector('[data-testid="UserName"]');
-    // if (nameElement) {
-    //   authorName = nameElement.textContent.trim();
-    // }
-
-    // Find the username element
-
-    // Select the anchor element using its data-testid
-
-
-    if (accountSwitcherButton) {
-      // Find the second div within the button element
-      const secondDiv = accountSwitcherButton.querySelector('div:nth-child(2)');
-      
-      if (secondDiv) {
-          // Find the fourth div within the second div
-          const fourthDiv = secondDiv.querySelector('div:nth-child(4)');
-          
-          if (fourthDiv) {
-              // Find the first span within the fourth div
-              const firstSpan = fourthDiv.querySelector('span:first-child');
-              console.log(firstSpan+"firstname")
-              if (firstSpan) {
-                  // Get the inner text of the first span
-                  const authorName = firstSpan.innerText.trim();
-                  console.log(authorName); // Output the extracted name ("Shreyas" if found correctly)
-              } else {
-                  console.log('First span not found');
-              }
-          } else {
-              console.log('Fourth div not found');
-          }
-      } else {
-          console.log('Second div not found');
-      }
-  } else {
-      console.log('Account switcher button not found');
-  }
 
     const usernameElement = document.querySelector('a[data-testid="AppTabBar_Profile_Link"]');
     if (usernameElement) {
@@ -239,19 +173,9 @@ function handleTextConversion() {
       }
     }
 
-    // Find the profile picture
-    const avatarContainer = accountSwitcherButton.querySelector('[data-testid="UserAvatar-Container"]');
-    if (avatarContainer) {
-      const imgElement = avatarContainer.querySelector('img');
-      if (imgElement) {
-        authorProfilePicUrl = imgElement.src;
-      }
-    }
-  
+  console.log(`Username: ${authorUsername}`);
 
-  console.log(`User Info - Name: ${authorName}, Username: ${authorUsername}, Profile Pic: ${authorProfilePicUrl}`);
-
-  const imageDataUrls = generateImages(text, authorName, authorUsername, authorProfilePicUrl);
+  const imageDataUrls = generateImages(text, authorUsername);
 
 
   const imageContainer = document.createElement('div');
