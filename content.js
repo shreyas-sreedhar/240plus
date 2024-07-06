@@ -27,7 +27,7 @@ function createConvertButton() {
     marginLeft: "8px",
     borderRadius: "20px",
     padding: "8px",
-    backgroundColor: "#1d9bf0",
+    backgroundColor: "#1f4bf0",
     border: "None",
     marginTop: "6px",
     cursor: "pointer"
@@ -38,7 +38,7 @@ function createConvertButton() {
   convertButton.setAttribute("data-testid", "convertToImageButton");
 
   const buttonText = document.createElement("div");
-  buttonText.innerText = "Send as Image";
+  buttonText.innerText = "Generate Image";
   buttonText.style.fontFamily = "Helvetica, sans-serif";
   convertButton.appendChild(buttonText);
 
