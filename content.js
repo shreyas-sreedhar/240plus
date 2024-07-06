@@ -95,7 +95,7 @@ function generateImages(text, authorUsername) {
     return lines;
   }
 
-  let allLines = getLines(`"${text}"`, fontSize);
+  let allLines = getLines(`${text}`, fontSize);
 
 // Calculate total text height
   const totalTextHeight = allLines.length * lineHeight;
