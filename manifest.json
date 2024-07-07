@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
-    "name": "Text to Image Converter",
-    "version": "1.0",
+    "name": "Tweet to Image Converter by 240Plus",
+    "version": "0.1",
     "permissions": ["activeTab"],
     "host_permissions": [
       "*://*.twitter.com/*",
