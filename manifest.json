@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "Tweet to Image Converter by 240Plus",
+    "name": "Draft Tweet to Image Converter",
     "version": "0.1",
     "permissions": ["activeTab"],
     "host_permissions": [
