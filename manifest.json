@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "Draft Tweet to Image Converter",
+    "name": "Tweet as Image - Tweet to Image Converter",
     "version": "0.1",
     "permissions": ["activeTab"],
     "host_permissions": [
